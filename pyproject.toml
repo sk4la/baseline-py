@@ -1,0 +1,79 @@
+[tool.poetry]
+name = "baseline"
+version = "0.1.0"
+repository = "https://github.com/sk4la/baseline"
+description = "Cross-platform library and command-line utility that creates file-oriented baselines of your systems."
+authors = [ "sk4la <sk4la.box@gmail.com>" ]
+maintainers = [ "sk4la <sk4la.box@gmail.com>" ]
+keywords = [
+    "digital-forensics",
+    "incident-response",
+]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Security"
+]
+
+[tool.poetry.dependencies]
+click = "^8.0.3"
+click_help_colors = "^0.9.1"
+hfilesize = "^0.1.0"
+pefile = "^2021.9.3"
+psutil = "^5.8.0"
+pydantic = "^1.8.2"
+python = "^3.9.7"
+python-magic = "^0.4.24"
+rich = "^10.12.0"
+ssdeep = "^3.4.0"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+flake8 = "^3.9.2"
+flake8-absolute-import = "^1.0"
+flake8-black = "^0.2.3"
+flake8-blind-except = "^0.2.0"
+flake8-bugbear = "^21.9.2"
+flake8-builtins = "^1.5.3"
+flake8-commas = "^2.1.0"
+flake8-comprehensions = "^3.7.0"
+flake8-copyright = "^0.2.2"
+flake8-debugger = "^4.0.0"
+flake8-docstrings = "^1.6.0"
+flake8-eradicate = "^1.2.0"
+flake8-executable = "^2.1.1"
+flake8-fixme = "^1.1.1"
+flake8-functions-names = "^0.0.6"
+flake8-import-order = "^0.18.1"
+flake8-logging-format = "^0.6.0"
+flake8-ownership = "^2.0.1"
+flake8-print = "^4.0.0"
+ipython = "^7.28.0"
+isort = "^5.9.3"
+mypy = "^0.910"
+nuitka = "^0.6.17.4"
+pipx = "^0.16.4"
+pre-commit = "^2.15.0"
+pyinstaller = "^4.5.1"
+pylint = "^2.11.1"
+pyright = "^0.0.10"
+pytest = "^6.2.5"
+rinohtype = "^0.5.3"
+sphinx = "^4.2.0"
+sphinx-autodoc-typehints = "^1.12.0"
+
+[tool.poetry.scripts]
+baseline = "baseline.interface.root:execute"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/sk4la/baseline/issues"
+
+[build-system]
+requires = ["poetry>=1.1.10"]
+build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 99
+target-version = ["py39"]

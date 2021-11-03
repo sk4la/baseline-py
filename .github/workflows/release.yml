@@ -1,0 +1,50 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  format:
+    name: Check the format of the source code using Black
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: rickstaa/action-black@v1
+        with:
+          black_args: --check baseline/
+  # build:
+  #   name: Build the Docker image
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - id: docker_login
+  #       name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKER_HUB_USERNAME }}
+  #         password: ${{ secrets.DOCKER_HUB_TOKEN }}
+  #     - id: docker_build_push
+  #       name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         build-args:
+  #           POETRY_VERSION: "1.1.7"
+  #           PRODUCT_BUILD_COMMIT:
+	# 	        PRODUCT_BUILD_DATE:
+  #           PRODUCT_REPOSITORY: https://github.com/sk4la/baseline
+  #           PRODUCT_VERSION: "0.1.0"
+  #           PYTHON_VERSION: 3.9-bullseye
+  #         push: true
+  #         tags:
+  #           - sk4la/baseline:0.1.0
+  #           - sk4la/baseline:latest
+  #     - env:
+  #         DOCKER_IMAGE_TAG: "0.1.0"
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       id: github_release
+  #       name: Create a new release
+  #       uses: actions/create-release@v1
+  #       with:
+  #         tag_name: ${{ env.DOCKER_IMAGE_TAG }}

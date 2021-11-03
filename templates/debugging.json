@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "disable_existing_loggers": true,
+  "formatters": {
+    "extended": {
+      "format": "%(asctime)s %(levelname)-8s %(name)-24s %(funcName)-24s %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S %Z"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "formatter": "extended",
+      "level": "DEBUG"
+    },
+    "file": {
+      "class": "logging.FileHandler",
+      "filename": "debug.log",
+      "formatter": "extended",
+      "level": "DEBUG"
+    }
+  },
+  "loggers": {
+    "baseline": {
+      "handlers": [
+        "console",
+        "file"
+      ],
+      "level": "DEBUG"
+    }
+  }
+}
