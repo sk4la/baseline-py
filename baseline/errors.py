@@ -16,47 +16,33 @@
 import typing
 
 __all__: typing.Tuple[str, ...] = (
-    "Failure",
+    "GenericError",
+    "ImplementationError",
     "ValidationError",
-    "UnimplementedExtractorError",
 )
 
 
-class Failure(Exception):
+class BaseException(Exception):
     def __init__(
         self: object,
         message: typing.Optional[str],
+        context: typing.Optional[typing.Dict[str, typing.Any]],
         *args: typing.Any,
         **kwargs: typing.Any,
     ) -> None:
         self.message: typing.Optional[str] = message
+        self.context: typing.Optional[typing.Dict[str, typing.Any]] = context
 
         super().__init__(*args, **kwargs)
 
 
-class ValidationError(Exception):
-    def __init__(
-        self: object,
-        message: typing.Optional[str],
-        parameters: typing.Optional[typing.List[str]],
-        *args: typing.Any,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.message: typing.Optional[str] = message
-        self.parameters: typing.Optional[typing.List[str]] = parameters
-
-        super().__init__(*args, **kwargs)
+class GenericError(BaseException):
+    ...
 
 
-class UnimplementedExtractorError(Exception):
-    def __init__(
-        self,
-        message: typing.Optional[str],
-        name: typing.Optional[str],
-        *args: typing.Any,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.message: typing.Optional[str] = message
-        self.name: typing.Optional[str] = name
+class ImplementationError(BaseException):
+    ...
 
-        super().__init__(*args, **kwargs)
+
+class ValidationError(BaseException):
+    ...

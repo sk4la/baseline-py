@@ -70,7 +70,7 @@ class PortableExecutable(models.Extractor):
                 models.kinds.humanize(self.kind),
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"failed to load file {self.entry}",
                 self.entry,
                 models.kinds.humanize(self.kind),

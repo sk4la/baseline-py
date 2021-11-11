@@ -13,17 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import importlib.metadata
 import typing
 
 __all__: typing.Tuple[str, ...] = (
-    "__author__",
-    "__license__",
-    "__maintainer__",
     "__version__",
     "SCHEMA_VERSION",
 )
 
+
+import importlib.metadata
 
 def retrieve_package_metadata(item: str, default: str) -> str:
     try:
@@ -33,9 +31,6 @@ def retrieve_package_metadata(item: str, default: str) -> str:
         return default
 
 
-__author__: str = "sk4la <sk4la.box@gmail.com>"
-__license__: str = "GPL-3.0-or-later"
-__maintainer__: str = retrieve_package_metadata("Maintainer", "sk4la <sk4la.box@gmail.com>")
-__version__: str = retrieve_package_metadata("Version", "0.1.0")
+__version__: str = retrieve_package_metadata("Version", "0.1.1")
 
 SCHEMA_VERSION: str = "0.1.0"

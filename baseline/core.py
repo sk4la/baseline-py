@@ -294,7 +294,7 @@ def process_partition(
 
                     logger.debug("Merged output from extractor `%s`.", extractor.KEY)
 
-                except errors.Failure:
+                except errors.GenericError:
                     logger.error(
                         "Failed to extract information from entry `%s` (%s) because of an "
                         "exception in extractor `%s`.",
@@ -376,7 +376,7 @@ class Baseline:
             )
 
         except FileNotFoundError as exception:
-            raise errors.Failure(f"entry `{exception.filename}` not found") from exception
+            raise errors.GenericError(f"entry `{exception.filename}` not found") from exception
 
         except pydantic.ValidationError as exception:
             outliers: typing.List[str] = list(
@@ -384,13 +384,16 @@ class Baseline:
             )
 
             self.logger.exception(
-                "Validation error in class attributes `%s`.",
+                "Validation error in the `%s` class attributes `%s`.",
+                __name__,
                 ", ".join(outliers),
             )
 
             raise errors.ValidationError(
                 "validation error in class attributes",
-                parameters=outliers,
+                context={
+                    "parameters": outliers,
+                },
             ) from exception
 
         try:
@@ -411,7 +414,7 @@ class Baseline:
                 "Unrecoverable failure in multiprocessing pool. Exiting now.",
             )
 
-            raise errors.Failure("process pool shut down abruptly") from exception
+            raise errors.GenericError("process pool shut down abruptly") from exception
 
         self.futures: typing.Dict[str, typing.Set[concurrent.futures.Future]] = {
             "gathering": set(),
@@ -464,7 +467,7 @@ class Baseline:
 
             self.pool.shutdown()
 
-            raise errors.Failure("process pool shut down abruptly") from value
+            raise errors.GenericError("process pool shut down abruptly") from value
 
     def __interrupt(
         self: object,
@@ -527,7 +530,7 @@ class Baseline:
             )
 
         except FileNotFoundError as exception:
-            raise errors.Failure(f"entry `{exception.filename}` not found") from exception
+            raise errors.GenericError(f"entry `{exception.filename}` not found") from exception
 
         except pydantic.ValidationError as exception:
             outliers: typing.List[str] = list(
@@ -535,13 +538,16 @@ class Baseline:
             )
 
             self.logger.exception(
-                "Validation error in class attributes `%s`.",
+                "Validation error in the `%s` class attributes `%s`.",
+                __name__,
                 ", ".join(outliers),
             )
 
             raise errors.ValidationError(
                 "validation error in class attributes",
-                parameters=outliers,
+                context={
+                    "parameters": outliers,
+                },
             ) from exception
 
         with self.pool as executor:
@@ -618,6 +624,6 @@ class Baseline:
                     )
 
                     for record in records:
-                        record.comment: typing.Optional[str] = parameters.comment
+                        record.comment = parameters.comment
 
                         yield record

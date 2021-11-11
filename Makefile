@@ -8,7 +8,7 @@ PRODUCT_BUILD_COMMIT:=$(shell git log --max-count=1 --pretty=format:%H)
 PRODUCT_BUILD_DATE:=$(shell date --iso-8601)
 PRODUCT_NAME=baseline
 PRODUCT_REPOSITORY=https://github.com/sk4la/baseline
-PRODUCT_VERSION?=0.1.0
+PRODUCT_VERSION?=0.1.1
 
 PYPI_USERNAME?=__token__
 PYPI_PASSWORD?=

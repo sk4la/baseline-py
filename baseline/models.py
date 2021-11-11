@@ -115,7 +115,7 @@ class Extractor:
         self.remap: typing.Dict[pathlib.Path, pathlib.Path] = remap
 
     def run(self: object, record: schema.Record) -> None:
-        raise errors.UnimplementedExtractorError(
+        raise errors.ImplementationError(
             f"extractor `{self.__class__.__name__}` not implemented",
             name=self.__class__.__name__,
         )

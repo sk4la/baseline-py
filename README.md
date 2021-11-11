@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="assets/logo.png" height="70" />
+  <img src="assets/logo_light.png" width="385" />
   <br />
   <img src="https://img.shields.io/static/v1?label=code%20style&message=black&color=black&style=flat-square"/>
-  <img src="https://img.shields.io/static/v1?label=version&message=0.1.0&color=orange&style=flat-square"/>
+  <img src="https://img.shields.io/static/v1?label=version&message=0.1.1&color=orange&style=flat-square"/>
   <img src="https://img.shields.io/static/v1?label=python&message=3.10&color=blueviolet&style=flat-square"/>
   <img src="https://img.shields.io/static/v1?label=license&message=GPLv3&color=brightgreen&style=flat-square"/>
 </div>
@@ -152,7 +152,7 @@ Usage: baseline schema <options>
   Show the JSON representation of the actual schema.
 
 Options:
-  --compact                       Render compact JSON instead of the default idented version.
+  --compact                       Render compact JSON instead of the default indented version.
   --output-file <file>            Set the output file path (e.g. 'schema.json').
   --output-file-encoding [utf-8|utf-16le]
                                   Set the output file encoding. Only applies when writing to an
