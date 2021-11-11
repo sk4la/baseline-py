@@ -44,14 +44,14 @@ class PortableExecutable(models.Extractor):
         r"\.tsp$",
     )
     KEY = "pe"
-    KINDS = (models.kinds.FILE,)
+    KINDS = (models.ObjectKinds.FILE,)
     MAGIC_SIGNATURE_FILTERS = (r"^PE32(\+) executable",)
     SYSTEM_FILTERS = (r"^Linux$",)
 
     def __init__(
         self: object,
         entry: pathlib.Path,
-        kind: int = models.kinds.FILE,
+        kind: int = models.ObjectKinds.FILE,
         remap: typing.Dict[pathlib.Path, pathlib.Path] = {},
     ) -> None:
         self.logger = logging.getLogger(__name__)
@@ -67,13 +67,13 @@ class PortableExecutable(models.Extractor):
             self.logger.exception(
                 "Failed to load file `%s` (%s).",
                 self.entry,
-                models.kinds.humanize(self.kind),
+                str(self.kind),
             )
 
             raise errors.GenericError(
                 f"failed to load file {self.entry}",
                 self.entry,
-                models.kinds.humanize(self.kind),
+                str(self.kind),
             ) from exception
 
     def __del__(self: object) -> None:

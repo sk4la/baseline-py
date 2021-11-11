@@ -2,7 +2,7 @@
   <img src="assets/logo_light.png" width="385" />
   <br />
   <img src="https://img.shields.io/static/v1?label=code%20style&message=black&color=black&style=flat-square"/>
-  <img src="https://img.shields.io/static/v1?label=version&message=0.1.2&color=orange&style=flat-square"/>
+  <img src="https://img.shields.io/static/v1?label=version&message=0.1.3&color=orange&style=flat-square"/>
   <img src="https://img.shields.io/static/v1?label=python&message=3.10&color=blueviolet&style=flat-square"/>
   <img src="https://img.shields.io/static/v1?label=license&message=GPLv3&color=brightgreen&style=flat-square"/>
 </div>

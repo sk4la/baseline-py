@@ -37,15 +37,15 @@ class Metadata(models.Extractor):
     EXTENSION_FILTERS = (r".*",)
     KEY = "fs"
     KINDS = (
-        models.kinds.FILE,
-        models.kinds.DIRECTORY,
-        models.kinds.SYMLINK,
-        models.kinds.BLOCK_DEVICE,
-        models.kinds.CHARACTER_DEVICE,
-        models.kinds.FIFO,
-        models.kinds.SOCKET,
-        models.kinds.MOUNT,
-        models.kinds.OTHER,
+        models.ObjectKinds.FILE,
+        models.ObjectKinds.DIRECTORY,
+        models.ObjectKinds.SYMLINK,
+        models.ObjectKinds.BLOCK_DEVICE,
+        models.ObjectKinds.CHARACTER_DEVICE,
+        models.ObjectKinds.FIFO,
+        models.ObjectKinds.SOCKET,
+        models.ObjectKinds.MOUNT,
+        models.ObjectKinds.OTHER,
     )
     MAGIC_SIGNATURE_FILTERS = (r".*",)
     SYSTEM_FILTERS = (r"^Linux$",)
@@ -71,7 +71,7 @@ class Metadata(models.Extractor):
 
         try:
             stats = self.entry.stat(
-                follow_symlinks=self.kind != models.kinds.SYMLINK,
+                follow_symlinks=self.kind != models.ObjectKinds.SYMLINK,
             )
 
         except TypeError:
@@ -110,7 +110,9 @@ class Metadata(models.Extractor):
                     ),
                 ),
                 size=stats.st_size,
-                target=str(self.entry.readlink()) if self.kind == models.kinds.SYMLINK else None,
+                target=str(self.entry.readlink())
+                if self.kind == models.ObjectKinds.SYMLINK
+                else None,
                 timestamps=schema.Timestamps(
                     atime=datetime.datetime.utcfromtimestamp(stats.st_atime).isoformat(),
                     ctime=datetime.datetime.utcfromtimestamp(stats.st_ctime).isoformat(),
@@ -127,7 +129,7 @@ class Hashes(models.Extractor):
 
     EXTENSION_FILTERS = (r".*",)
     KEY = "hash"
-    KINDS = (models.kinds.FILE,)
+    KINDS = (models.ObjectKinds.FILE,)
     MAGIC_SIGNATURE_FILTERS = (r".*",)
     SYSTEM_FILTERS = (r"^Linux$",)
 

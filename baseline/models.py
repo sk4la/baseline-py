@@ -13,7 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import dataclasses
+# import dataclasses
+import enum
 import logging
 import pathlib
 import platform
@@ -23,39 +24,25 @@ import typing
 from baseline import errors, schema
 
 __all__: typing.Tuple[str, ...] = (
-    "kinds",
     "Extractor",
+    "ObjectKinds",
 )
 
 
-@dataclasses.dataclass(frozen=True)
-class ObjectKind:
-    FILE: int = 0
-    DIRECTORY: int = 1
-    SYMLINK: int = 2
-    BLOCK_DEVICE: int = 3
-    CHARACTER_DEVICE: int = 4
-    FIFO: int = 5
-    SOCKET: int = 6
-    MOUNT: int = 7
-    OTHER: int = 100
+@enum.unique
+class ObjectKinds(str, enum.Enum):
+    FILE: int = enum.auto()
+    DIRECTORY: int = enum.auto()
+    SYMLINK: int = enum.auto()
+    BLOCK_DEVICE: int = enum.auto()
+    CHARACTER_DEVICE: int = enum.auto()
+    FIFO: int = enum.auto()
+    SOCKET: int = enum.auto()
+    MOUNT: int = enum.auto()
+    OTHER: int = enum.auto()
 
-    @classmethod
-    def humanize(cls: object, kind: int) -> str:
-        return {
-            cls.FILE: "file",
-            cls.DIRECTORY: "directory",
-            cls.SYMLINK: "symlink",
-            cls.BLOCK_DEVICE: "block_device",
-            cls.CHARACTER_DEVICE: "character_device",
-            cls.FIFO: "fifo",
-            cls.SOCKET: "socket",
-            cls.MOUNT: "mount",
-            cls.OTHER: "other",
-        }.get(kind, "other")
-
-
-kinds: ObjectKind = ObjectKind()
+    def __str__(self):
+        return self.name.lower()
 
 
 class Extractor:
@@ -64,15 +51,15 @@ class Extractor:
     EXTENSION_FILTERS: typing.Tuple[str, ...] = tuple()
     KEY: str = "example"
     KINDS: typing.Tuple[int, ...] = (
-        kinds.FILE,
-        kinds.DIRECTORY,
-        kinds.SYMLINK,
-        kinds.BLOCK_DEVICE,
-        kinds.CHARACTER_DEVICE,
-        kinds.FIFO,
-        kinds.SOCKET,
-        kinds.MOUNT,
-        kinds.OTHER,
+        ObjectKinds.FILE,
+        ObjectKinds.DIRECTORY,
+        ObjectKinds.SYMLINK,
+        ObjectKinds.BLOCK_DEVICE,
+        ObjectKinds.CHARACTER_DEVICE,
+        ObjectKinds.FIFO,
+        ObjectKinds.SOCKET,
+        ObjectKinds.MOUNT,
+        ObjectKinds.OTHER,
     )
     MAGIC_SIGNATURE_FILTERS: typing.Tuple[str, ...] = tuple()
     SYSTEM_FILTERS: typing.Tuple[str, ...] = tuple()
@@ -85,7 +72,7 @@ class Extractor:
     def supports(
         cls: object,
         entry: pathlib.Path,
-        kind: int = kinds.FILE,
+        kind: int = ObjectKinds.FILE,
         magic_signature: typing.Optional[str] = None,
     ) -> bool:
         if kind not in cls.KINDS:
@@ -105,7 +92,7 @@ class Extractor:
     def __init__(
         self: object,
         entry: pathlib.Path,
-        kind: typing.Optional[int] = kinds.FILE,
+        kind: typing.Optional[int] = ObjectKinds.FILE,
         remap: typing.Dict[pathlib.Path, pathlib.Path] = {},
     ) -> None:
         self.logger: logging.Logger = logging.getLogger(__name__)

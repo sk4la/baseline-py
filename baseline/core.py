@@ -78,7 +78,7 @@ def gather_filesystem_entries(
                     continue
 
             if entry.is_file():
-                kind: int = models.kinds.FILE
+                kind: int = models.ObjectKinds.FILE
 
             elif entry.is_dir():
                 if skip_directories:
@@ -89,31 +89,31 @@ def gather_filesystem_entries(
 
                     continue
 
-                kind: int = models.kinds.DIRECTORY
+                kind: int = models.ObjectKinds.DIRECTORY
 
             elif entry.is_block_device():
-                kind: int = models.kinds.BLOCK_DEVICE
+                kind: int = models.ObjectKinds.BLOCK_DEVICE
 
             elif entry.is_char_device():
-                kind: int = models.kinds.CHARACTER_DEVICE
+                kind: int = models.ObjectKinds.CHARACTER_DEVICE
 
             elif entry.is_fifo():
-                kind: int = models.kinds.FIFO
+                kind: int = models.ObjectKinds.FIFO
 
             elif entry.is_socket():
-                kind: int = models.kinds.SOCKET
+                kind: int = models.ObjectKinds.SOCKET
 
             elif entry.is_symlink():
-                kind: int = models.kinds.SYMLINK
+                kind: int = models.ObjectKinds.SYMLINK
 
             elif entry.is_mount():
-                kind: int = models.kinds.MOUNT
+                kind: int = models.ObjectKinds.MOUNT
 
             else:
-                kind: int = models.kinds.OTHER
+                kind: int = models.ObjectKinds.OTHER
 
             try:
-                stats = entry.stat(follow_symlinks=kind != models.kinds.SYMLINK)
+                stats = entry.stat(follow_symlinks=kind != models.ObjectKinds.SYMLINK)
 
             except TypeError:
                 if sys.version_info >= (3, 10):
@@ -235,8 +235,8 @@ def process_partition(
         mime_type: typing.Optional[str] = None
 
         if kind in (
-            models.kinds.FILE,
-            models.kinds.BLOCK_DEVICE,
+            models.ObjectKinds.FILE,
+            models.ObjectKinds.BLOCK_DEVICE,
         ):
             try:
                 with entry.open("rb") as stream:
@@ -281,7 +281,7 @@ def process_partition(
 
         record: schema.Record = schema.Record(
             signature=schema.Signature(
-                kind=models.kinds.humanize(kind),
+                kind=str(kind),
                 magic=magic_signature,
                 mime=mime_type,
             ),
@@ -300,7 +300,7 @@ def process_partition(
                         "Failed to extract information from entry `%s` (%s) because of an "
                         "exception in extractor `%s`.",
                         entry,
-                        models.kinds.humanize(kind),
+                        str(kind),
                         extractor.KEY,
                     )
 
@@ -309,7 +309,7 @@ def process_partition(
                         "Failed to extract information from entry `%s` (%s) because of an "
                         "unrecoverable exception in extractor `%s`.",
                         entry,
-                        models.kinds.humanize(kind),
+                        str(kind),
                         extractor.KEY,
                     )
 
