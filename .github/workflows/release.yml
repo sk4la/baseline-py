@@ -34,14 +34,14 @@ jobs:
   #           PRODUCT_BUILD_COMMIT:
 	# 	        PRODUCT_BUILD_DATE:
   #           PRODUCT_REPOSITORY: https://github.com/sk4la/baseline
-  #           PRODUCT_VERSION: "0.1.1"
+  #           PRODUCT_VERSION: "0.1.2"
   #           PYTHON_VERSION: 3.9-bullseye
   #         push: true
   #         tags:
-  #           - sk4la/baseline:0.1.1
+  #           - sk4la/baseline:0.1.2
   #           - sk4la/baseline:latest
   #     - env:
-  #         DOCKER_IMAGE_TAG: "0.1.1"
+  #         DOCKER_IMAGE_TAG: "0.1.2"
   #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #       id: github_release
   #       name: Create a new release

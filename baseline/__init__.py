@@ -23,6 +23,7 @@ __all__: typing.Tuple[str, ...] = (
 
 import importlib.metadata
 
+
 def retrieve_package_metadata(item: str, default: str) -> str:
     try:
         return importlib.metadata.metadata(__package__).get(item, default)
@@ -31,6 +32,6 @@ def retrieve_package_metadata(item: str, default: str) -> str:
         return default
 
 
-__version__: str = retrieve_package_metadata("Version", "0.1.1")
+__version__: str = retrieve_package_metadata("Version", "0.1.2")
 
 SCHEMA_VERSION: str = "0.1.0"

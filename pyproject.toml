@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "baseline"
-version = "0.1.1"
+version = "0.1.2"
 repository = "https://github.com/sk4la/baseline"
 description = "Cross-platform library and command-line utility that creates file-oriented baselines of your systems."
 authors = [ "sk4la <sk4la.box@gmail.com>" ]

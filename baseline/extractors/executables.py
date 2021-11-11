@@ -84,14 +84,14 @@ class PortableExecutable(models.Extractor):
             record,
             self.KEY,
             schema.PortableExecutable(
-                exports=list(self.__get_exports(self.executable)),
-                imports=list(self.__get_imports(self.executable)),
-                resources=list(self.__get_resources(self.executable)),
-                sections=list(self.__get_sections(self.executable)),
+                exports=list(self._get_exports(self.executable)),
+                imports=list(self._get_imports(self.executable)),
+                resources=list(self._get_resources(self.executable)),
+                sections=list(self._get_sections(self.executable)),
             ),
         )
 
-    def __get_exports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
+    def _get_exports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
         executable.parse_data_directories(
             directories=[pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_EXPORT"]],
         )
@@ -109,7 +109,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_imports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
+    def _get_imports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
         executable.parse_data_directories(
             directories=[pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"]],
         )
@@ -130,7 +130,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_resources(
+    def _get_resources(
         self: object,
         executable: pefile.PE,
     ) -> typing.Iterator[schema.PortableExecutableResource]:
@@ -155,7 +155,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_sections(
+    def _get_sections(
         self: object,
         executable: pefile.PE,
     ) -> typing.Iterator[schema.PortableExecutableSection]:

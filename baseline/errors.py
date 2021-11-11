@@ -26,8 +26,8 @@ class BaseException(Exception):
     def __init__(
         self: object,
         message: typing.Optional[str],
-        context: typing.Optional[typing.Dict[str, typing.Any]],
         *args: typing.Any,
+        context: typing.Optional[typing.Dict[str, typing.Any]] = {},
         **kwargs: typing.Any,
     ) -> None:
         self.message: typing.Optional[str] = message

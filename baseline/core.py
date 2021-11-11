@@ -122,8 +122,9 @@ def gather_filesystem_entries(
                 warnings.warn(
                     "The `follow_symlinks` parameter was only added to `pathlib.Path.stat` in Python "
                     "3.10 so it cannot be used with the current installation of Python ("
-                    f"{'.'.join(str(_) for _ in sys.version_info[:3])}). Update your installation to "
-                    "remove this warning. Falling back to the old way (following all symlinks)."
+                    f"{'.'.join(str(component) for component in sys.version_info[:3])}). Update your "
+                    "installation to remove this warning. Falling back to the old way (following all "
+                    "symlinks)."
                 )
 
                 try:
@@ -421,7 +422,7 @@ class Baseline:
             "analysis": set(),
         }
 
-    def __split_partitions(
+    def _split_partitions(
         self: object,
         items: typing.List[typing.Any],
         count: int = 1,
@@ -444,9 +445,9 @@ class Baseline:
         # exception with the complete traceback).
         #
         if traceback:
-            {KeyboardInterrupt: self.__interrupt}.get(
+            {KeyboardInterrupt: self._interrupt}.get(
                 kind,
-                self.__panic,
+                self._panic,
             )(kind, value, traceback)
 
         self.pool.shutdown()
@@ -456,7 +457,7 @@ class Baseline:
         #
         self.pool.__exit__(None, None, None)
 
-    def __panic(
+    def _panic(
         self: object,
         _: typing.Optional[typing.Any],
         value: typing.Optional[BaseException],
@@ -469,7 +470,7 @@ class Baseline:
 
             raise errors.GenericError("process pool shut down abruptly") from value
 
-    def __interrupt(
+    def _interrupt(
         self: object,
         *_args: typing.Any,
         **_kwargs: typing.Any,
@@ -593,7 +594,7 @@ class Baseline:
                     float(total) / float(parameters.partition_size),
                 )
 
-                for partition in self.__split_partitions(entries, parameters.partition_size):
+                for partition in self._split_partitions(entries, parameters.partition_size):
                     self.futures["analysis"].add(
                         executor.submit(
                             process_partition,
