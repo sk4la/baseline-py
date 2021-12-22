@@ -78,7 +78,7 @@ def gather_filesystem_entries(
                     continue
 
             if entry.is_file():
-                kind: int = models.ObjectKinds.FILE
+                kind: int = models.Kind.FILE
 
             elif entry.is_dir():
                 if skip_directories:
@@ -89,31 +89,31 @@ def gather_filesystem_entries(
 
                     continue
 
-                kind: int = models.ObjectKinds.DIRECTORY
+                kind: int = models.Kind.DIRECTORY
 
             elif entry.is_block_device():
-                kind: int = models.ObjectKinds.BLOCK_DEVICE
+                kind: int = models.Kind.BLOCK_DEVICE
 
             elif entry.is_char_device():
-                kind: int = models.ObjectKinds.CHARACTER_DEVICE
+                kind: int = models.Kind.CHARACTER_DEVICE
 
             elif entry.is_fifo():
-                kind: int = models.ObjectKinds.FIFO
+                kind: int = models.Kind.FIFO
 
             elif entry.is_socket():
-                kind: int = models.ObjectKinds.SOCKET
+                kind: int = models.Kind.SOCKET
 
             elif entry.is_symlink():
-                kind: int = models.ObjectKinds.SYMLINK
+                kind: int = models.Kind.SYMLINK
 
             elif entry.is_mount():
-                kind: int = models.ObjectKinds.MOUNT
+                kind: int = models.Kind.MOUNT
 
             else:
-                kind: int = models.ObjectKinds.OTHER
+                kind: int = models.Kind.OTHER
 
             try:
-                stats = entry.stat(follow_symlinks=kind != models.ObjectKinds.SYMLINK)
+                stats = entry.stat(follow_symlinks=kind != models.Kind.SYMLINK)
 
             except TypeError:
                 if sys.version_info >= (3, 10):
@@ -235,8 +235,8 @@ def process_partition(
         mime_type: typing.Optional[str] = None
 
         if kind in (
-            models.ObjectKinds.FILE,
-            models.ObjectKinds.BLOCK_DEVICE,
+            models.Kind.FILE,
+            models.Kind.BLOCK_DEVICE,
         ):
             try:
                 with entry.open("rb") as stream:

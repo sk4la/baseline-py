@@ -44,14 +44,14 @@ class PortableExecutable(models.Extractor):
         r"\.tsp$",
     )
     KEY = "pe"
-    KINDS = (models.ObjectKinds.FILE,)
+    KINDS = (models.Kind.FILE,)
     MAGIC_SIGNATURE_FILTERS = (r"^PE32(\+) executable",)
     SYSTEM_FILTERS = (r"^Linux$",)
 
     def __init__(
         self: object,
         entry: pathlib.Path,
-        kind: int = models.ObjectKinds.FILE,
+        kind: int = models.Kind.FILE,
         remap: typing.Dict[pathlib.Path, pathlib.Path] = {},
     ) -> None:
         self.logger = logging.getLogger(__name__)

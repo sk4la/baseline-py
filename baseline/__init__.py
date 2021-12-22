@@ -32,6 +32,6 @@ def retrieve_package_metadata(item: str, default: str) -> str:
         return default
 
 
-__version__: str = retrieve_package_metadata("Version", "0.1.3")
+__version__: str = retrieve_package_metadata("Version", "0.2.0")
 
 SCHEMA_VERSION: str = "0.1.0"

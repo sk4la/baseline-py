@@ -17,7 +17,6 @@ import typing
 
 __all__: typing.Tuple[str, ...] = (
     "GenericError",
-    "ImplementationError",
     "ValidationError",
 )
 
@@ -37,10 +36,6 @@ class BaseException(Exception):
 
 
 class GenericError(BaseException):
-    ...
-
-
-class ImplementationError(BaseException):
     ...
 
 
