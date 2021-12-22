@@ -1,6 +1,7 @@
 <div align="center">
   <br />
-  <img src="assets/logo_dark.png" width="500" />
+  <img src="assets/logo_dark.png" width="600" />
+  <br />
   <br />
   <img src="https://img.shields.io/static/v1?label=code%20style&message=black&color=black&style=flat-square"/>
   <img src="https://img.shields.io/static/v1?label=version&message=0.2.0&color=orange&style=flat-square"/>
