@@ -619,7 +619,10 @@ def create_baseline(
     logger.info("Language                  : %s", ".".join(locale.getdefaultlocale()))
     logger.info("System Timezone           : %s", datetime.datetime.now().astimezone().tzname())
     logger.info("Processor Architecture    : %s", platform.machine())
-    logger.info("Computer Name             : %s", platform.node())
+
+    computer_name = platform.node()
+
+    logger.info("Computer Name             : %s", computer_name)
     logger.info("Username                  : %s", getpass.getuser())
     logger.info("Effective User Identifier : %s", os.geteuid())
     logger.info("Effective Command Line    : %s", " ".join(sys.argv))
@@ -660,59 +663,76 @@ def create_baseline(
                 )
                 logger.debug("Writing the results to `%s`.", output_file)
 
-                try:
-                    with output_file.open(
-                        mode="w",
-                        encoding=output_file_encoding,
-                    ) as stream:
-                        for data in {
-                            "html": unwind_results_html,
-                            "ndjson": unwind_results_json,
-                        }[output_format](results):
-                            stream.write(data)
+                ###
 
-                            count += 1
-                            total_size += len(data)
+                import jinja2
 
-                except PermissionError:
-                    logger.error(
-                        "Failed to open file `%s` for writing because of insufficient "
-                        "permissions.",
-                        output_file,
-                    )
+                template = jinja2.Template(
+                    pathlib.Path("/mnt/host/baseline/templates/ndjson.jinja").read_text(),
+                )
 
-                    sys.exit(os.EX_SOFTWARE)
+                with output_file.open(mode="w", encoding=output_file_encoding) as stream:
+                    stream.write(template.render(
+                        title=baseline.__package__.capitalize(), 
+                        computer_name=computer_name, 
+                        records=results,
+                    ))
 
-                except RuntimeError:
-                    logger.error(
-                        "Probable infinite loop encountered while opening file `%s` for writing.",
-                        output_file,
-                    )
+                ###
 
-                    sys.exit(os.EX_SOFTWARE)
+            #     try:
+            #         with output_file.open(
+            #             mode="w",
+            #             encoding=output_file_encoding,
+            #         ) as stream:
+            #             for data in {
+            #                 "html": unwind_results_html,
+            #                 "ndjson": unwind_results_json,
+            #             }[output_format](results):
+            #                 stream.write(data)
 
-                except Exception:
-                    logger.exception(
-                        "Unknown system exception raised while opening file `%s` for writing.",
-                        output_file,
-                    )
+            #                 count += 1
+            #                 total_size += len(data)
 
-                    sys.exit(os.EX_SOFTWARE)
+            #     except PermissionError:
+            #         logger.error(
+            #             "Failed to open file `%s` for writing because of insufficient "
+            #             "permissions.",
+            #             output_file,
+            #         )
 
-            else:
-                output_file: pathlib.Path = output_file.with_suffix(f"{output_file.suffix}.xz")
+            #         sys.exit(os.EX_SOFTWARE)
 
-                logger.debug("Compressing and writing the results to `%s`.", output_file)
+            #     except RuntimeError:
+            #         logger.error(
+            #             "Probable infinite loop encountered while opening file `%s` for writing.",
+            #             output_file,
+            #         )
 
-                with lzma.open(output_file, "wb") as stream:
-                    for data in {
-                        "html": unwind_results_html_compressed,
-                        "ndjson": unwind_results_json_compressed,
-                    }[output_format](results, character_encoding=output_file_encoding):
-                        stream.write(data)
+            #         sys.exit(os.EX_SOFTWARE)
 
-                        count += 1
-                        total_size += len(data)
+            #     except Exception:
+            #         logger.exception(
+            #             "Unknown system exception raised while opening file `%s` for writing.",
+            #             output_file,
+            #         )
+
+            #         sys.exit(os.EX_SOFTWARE)
+
+            # else:
+            #     output_file: pathlib.Path = output_file.with_suffix(f"{output_file.suffix}.xz")
+
+            #     logger.debug("Compressing and writing the results to `%s`.", output_file)
+
+            #     with lzma.open(output_file, "wb") as stream:
+            #         for data in {
+            #             "html": unwind_results_html_compressed,
+            #             "ndjson": unwind_results_json_compressed,
+            #         }[output_format](results, character_encoding=output_file_encoding):
+            #             stream.write(data)
+
+            #             count += 1
+            #             total_size += len(data)
 
             duration: datetime.timedelta = datetime.datetime.utcnow() - start_time
 
