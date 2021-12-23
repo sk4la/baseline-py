@@ -1,4 +1,5 @@
 import json
+from uuid import uuid4
 """
 def recurse_graph(path, content, graph):
     folders = path.split("/")
@@ -22,15 +23,20 @@ def build_graph(paths):
     nodes = set()
     edges = []
     for path, content in paths:
-        print(path, content)
         folders = [ f for f in path.split("/") if f]
-        nodes.update(folders)
+        #nodes.update(folders)
         for i in range(len(folders) - 1):
-            print(folders[i])
+            if not folders[:i]:
+                continue
+            head = "-".join(folders[:i])
+            tail = "-".join(folders[:i+1])
+            nodes.add(head)
+            nodes.add(tail)
+
             edges.append({"data": {
-                "id": folders[i] + folders[i+1],
-                "source": folders[i],
-                "target": folders[i+1]
+                "id": uuid4().hex,
+                "source": head,
+                "target": tail
             }})
     nodes = [{ "data": { "id": n } } for n in nodes]
     return nodes + edges
