@@ -229,6 +229,34 @@ class PlatformSpecificDefaults(click.Argument):
         )
 
 
+def unwind_results_html(
+    results: typing.Iterator[schema.Record],
+) -> typing.Iterator[bytes]:
+    raise NotImplementedError
+
+
+def unwind_results_json(
+    results: typing.Iterator[schema.Record],
+) -> typing.Iterator[bytes]:
+    for entry in results:
+        yield entry.json(exclude_none=True) + "\n"
+
+
+def unwind_results_html_compressed(
+    results: typing.Iterator[schema.Record],
+    character_encoding: str = "utf-8",
+) -> typing.Iterator[bytes]:
+    raise NotImplementedError
+
+
+def unwind_results_json_compressed(
+    results: typing.Iterator[schema.Record],
+    character_encoding: str = "utf-8",
+) -> typing.Iterator[bytes]:
+    for entry in results:
+        yield (entry.json(exclude_none=True) + "\n").encode(character_encoding)
+
+
 @execute.command(
     cls=click_help_colors.HelpColorsCommand,
     context_settings={
@@ -332,7 +360,7 @@ class PlatformSpecificDefaults(click.Argument):
     help="Set the output format.",
     show_default=True,
     type=click.Choice(
-        ["ndjson"],
+        ["html", "ndjson"],
         case_sensitive=False,
     ),
 )
@@ -637,13 +665,14 @@ def create_baseline(
                         mode="w",
                         encoding=output_file_encoding,
                     ) as stream:
-                        for entry in results:
-                            data: str = entry.json(exclude_none=True) + "\n"
+                        for data in {
+                            "html": unwind_results_html,
+                            "ndjson": unwind_results_json,
+                        }[output_format](results):
+                            stream.write(data)
 
                             count += 1
                             total_size += len(data)
-
-                            stream.write(data)
 
                 except PermissionError:
                     logger.error(
@@ -676,13 +705,14 @@ def create_baseline(
                 logger.debug("Compressing and writing the results to `%s`.", output_file)
 
                 with lzma.open(output_file, "wb") as stream:
-                    for entry in results:
-                        data = (entry.json(exclude_none=True) + "\n").encode(output_file_encoding)
+                    for data in {
+                        "html": unwind_results_html_compressed,
+                        "ndjson": unwind_results_json_compressed,
+                    }[output_format](results, character_encoding=output_file_encoding):
+                        stream.write(data)
 
                         count += 1
                         total_size += len(data)
-
-                        stream.write(data)
 
             duration: datetime.timedelta = datetime.datetime.utcnow() - start_time
 
