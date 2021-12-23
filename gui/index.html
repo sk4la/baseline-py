@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@1.15.19/dist/quasar.min.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+    <div id="q-app">
+      <q-layout view="hHh lpR fFf">
+        <q-header elevated class="bg-primary text-white">
+          <q-toolbar>
+            <q-toolbar-title>
+              <q-avatar>
+                <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+              </q-avatar>
+                bite
+            </q-toolbar-title>
+          </q-toolbar>
+        </q-header>
+
+        <q-page-container>
+            yo
+            <div id="cy"></div>
+        </q-page-container>
+
+      </q-layout>
+    </div>
+
+  </body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quasar@1.15.19/dist/quasar.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
+<script type="text/javascript" language="javascript" src="graph_cytoscape.json"></script> 
+<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.min.js"></script>
+
+<script>
+
+    new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+            graph: {}
+          }
+        },
+        methods: {},
+        mounted: function () {
+            const cy = cytoscape({
+              container: document.getElementById('cy'),
+              elements: g,
+                layout: {
+                    name: 'dagre'
+                },
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'label': 'data(id)',
+                        'background-color': 'pink'
+                    }
+                }]     
+            })
+
+        }
+    })
+</script>
+
+<style>
+    #cy {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+</style>
