@@ -1,5 +1,4 @@
 import json
-from uuid import uuid4
 """
 def recurse_graph(path, content, graph):
     folders = path.split("/")
@@ -24,21 +23,20 @@ def build_graph(paths):
     edges = []
     for path, content in paths:
         folders = [ f for f in path.split("/") if f]
-        #nodes.update(folders)
         for i in range(len(folders) - 1):
             if not folders[:i]:
                 continue
             head = "-".join(folders[:i])
             tail = "-".join(folders[:i+1])
-            nodes.add(head)
-            nodes.add(tail)
+            nodes.update([head, tail])
 
             edges.append({"data": {
-                "id": uuid4().hex,
+                "id": head+tail,
                 "source": head,
                 "target": tail
             }})
-    nodes = [{ "data": { "id": n } } for n in nodes]
+
+    nodes = [{ "data": { "id": n, "label": n.split("-")[-1] } } for n in nodes]
     return nodes + edges
 
 if __name__ == "__main__":
@@ -49,6 +47,6 @@ if __name__ == "__main__":
             if json_line["signature"]["kind"] == "file":
                 paths.append((json_line["fs"]["path"], json_line["fs"]["name"]))
     
-    g = build_graph(paths)  
+    g = build_graph(paths)
     with open("graph_cytoscape.json", "w+") as f:
         f.write(f"var g = {json.dumps(g)}\n")
