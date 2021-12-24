@@ -94,15 +94,15 @@ class PortableExecutable(pydantic.BaseModel):
     sections: typing.Optional[typing.List[PortableExecutableSection]]
 
 
-class Version(pydantic.BaseModel):
-    package: typing.Optional[str] = baseline.__version__
-    model: typing.Optional[str] = baseline.SCHEMA_VERSION
-
-
 class Signature(pydantic.BaseModel):
     kind: str
     magic: typing.Optional[str]
     mime: typing.Optional[str]
+
+
+class Version(pydantic.BaseModel):
+    package: typing.Optional[str] = baseline.__version__
+    model: typing.Optional[str] = baseline.SCHEMA_VERSION
 
 
 class Record(pydantic.BaseModel):

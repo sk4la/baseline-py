@@ -501,7 +501,7 @@ def create_baseline(
                         logging_configuration,
                     )
 
-                    raise errors.Failure(
+                    raise errors.GenericError(
                         "failed to initialize logger using the configuration from "
                         f"`{logging_configuration}`",
                     ) from exception
@@ -512,7 +512,7 @@ def create_baseline(
                 logging_configuration,
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"failed to read from `{logging_configuration}`",
             ) from exception
 
@@ -522,7 +522,7 @@ def create_baseline(
                 logging_configuration,
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"failed to read from `{logging_configuration}`",
             ) from exception
 
@@ -532,7 +532,7 @@ def create_baseline(
                 logging_configuration,
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"failed to read from `{logging_configuration}`",
             ) from exception
 
@@ -747,16 +747,16 @@ def create_baseline(
         sys.exit(os.EX_SOFTWARE)
 
     except errors.ValidationError as exception:
-        logger.error(
+        logger.critical(
             "Validation error in the `%s.core.%s` class attributes `%s`.",
             baseline.__package__,
             core.Baseline.__name__,
-            ", ".join(exception.parameters),
+            ", ".join(exception.context.get("parameters", [])),
         )
 
         sys.exit(os.EX_SOFTWARE)
 
-    except errors.Failure:
+    except errors.GenericError:
         logger.exception(
             "Unrecoverable failure occurred. Exiting now after `%s`.",
             datetime.datetime.utcnow() - start_time,
@@ -833,7 +833,7 @@ def print_schema(
                 output_file,
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"cannot open file `{output_file}` because of insufficient permissions",
             ) from exception
 
@@ -843,7 +843,7 @@ def print_schema(
                 output_file,
             )
 
-            raise errors.Failure(f"failed to open file `{output_file}`") from exception
+            raise errors.GenericError(f"failed to open file `{output_file}`") from exception
 
         except Exception as exception:
             logger.exception(
@@ -851,7 +851,7 @@ def print_schema(
                 output_file,
             )
 
-            raise errors.Failure(f"failed to open file `{output_file}`") from exception
+            raise errors.GenericError(f"failed to open file `{output_file}`") from exception
 
     elif context.obj.get("monochrome", False):
         sys.stdout.write(output + "\n")

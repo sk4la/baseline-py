@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 # Copyright (C) 2021  sk4la <sk4la.box@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify

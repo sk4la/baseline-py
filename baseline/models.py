@@ -13,7 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import dataclasses
+import abc
+import enum
 import logging
 import pathlib
 import platform
@@ -23,60 +24,51 @@ import typing
 from baseline import errors, schema
 
 __all__: typing.Tuple[str, ...] = (
-    "kinds",
     "Extractor",
+    "Kind",
 )
 
 
-@dataclasses.dataclass(frozen=True)
-class ObjectKind:
-    FILE: int = 0
-    DIRECTORY: int = 1
-    SYMLINK: int = 2
-    BLOCK_DEVICE: int = 3
-    CHARACTER_DEVICE: int = 4
-    FIFO: int = 5
-    SOCKET: int = 6
-    MOUNT: int = 7
-    OTHER: int = 100
+@enum.unique
+class Kind(str, enum.Enum):
+    FILE: int = enum.auto()
+    DIRECTORY: int = enum.auto()
+    SYMLINK: int = enum.auto()
+    BLOCK_DEVICE: int = enum.auto()
+    CHARACTER_DEVICE: int = enum.auto()
+    FIFO: int = enum.auto()
+    SOCKET: int = enum.auto()
+    MOUNT: int = enum.auto()
+    OTHER: int = enum.auto()
 
-    @classmethod
-    def humanize(cls: object, kind: int) -> str:
-        return {
-            cls.FILE: "file",
-            cls.DIRECTORY: "directory",
-            cls.SYMLINK: "symlink",
-            cls.BLOCK_DEVICE: "block_device",
-            cls.CHARACTER_DEVICE: "character_device",
-            cls.FIFO: "fifo",
-            cls.SOCKET: "socket",
-            cls.MOUNT: "mount",
-            cls.OTHER: "other",
-        }.get(kind, "other")
+    def __str__(self):
+        return self.name.lower()
 
 
-kinds: ObjectKind = ObjectKind()
-
-
-class Extractor:
-    """Pseudo-abstract class."""
+class Extractor(abc.ABC):
+    """Abstract class used to derive all extractors."""
 
     EXTENSION_FILTERS: typing.Tuple[str, ...] = tuple()
-    KEY: str = "example"
     KINDS: typing.Tuple[int, ...] = (
-        kinds.FILE,
-        kinds.DIRECTORY,
-        kinds.SYMLINK,
-        kinds.BLOCK_DEVICE,
-        kinds.CHARACTER_DEVICE,
-        kinds.FIFO,
-        kinds.SOCKET,
-        kinds.MOUNT,
-        kinds.OTHER,
+        Kind.FILE,
+        Kind.DIRECTORY,
+        Kind.SYMLINK,
+        Kind.BLOCK_DEVICE,
+        Kind.CHARACTER_DEVICE,
+        Kind.FIFO,
+        Kind.SOCKET,
+        Kind.MOUNT,
+        Kind.OTHER,
     )
     MAGIC_SIGNATURE_FILTERS: typing.Tuple[str, ...] = tuple()
     SYSTEM_FILTERS: typing.Tuple[str, ...] = tuple()
 
+    @property
+    @abc.abstractmethod
+    def KEY(self) -> str:
+        ...
+
+    @property
     @classmethod
     def is_compatible(cls: object) -> bool:
         return any(re.match(pattern, platform.system()) for pattern in cls.SYSTEM_FILTERS)
@@ -85,7 +77,7 @@ class Extractor:
     def supports(
         cls: object,
         entry: pathlib.Path,
-        kind: int = kinds.FILE,
+        kind: int = Kind.FILE,
         magic_signature: typing.Optional[str] = None,
     ) -> bool:
         if kind not in cls.KINDS:
@@ -105,7 +97,7 @@ class Extractor:
     def __init__(
         self: object,
         entry: pathlib.Path,
-        kind: typing.Optional[int] = kinds.FILE,
+        kind: typing.Optional[int] = Kind.FILE,
         remap: typing.Dict[pathlib.Path, pathlib.Path] = {},
     ) -> None:
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -113,12 +105,6 @@ class Extractor:
         self.entry: pathlib.Path = entry
         self.kind: typing.Optional[int] = kind
         self.remap: typing.Dict[pathlib.Path, pathlib.Path] = remap
-
-    def run(self: object, record: schema.Record) -> None:
-        raise errors.UnimplementedExtractorError(
-            f"extractor `{self.__class__.__name__}` not implemented",
-            name=self.__class__.__name__,
-        )
 
     def remap_location(self: object, location: pathlib.Path) -> pathlib.Path:
         for source, destination in self.remap.items():
@@ -129,3 +115,7 @@ class Extractor:
                 pass
 
         return location
+
+    @abc.abstractmethod
+    def run(self: object, record: schema.Record) -> None:
+        ...
