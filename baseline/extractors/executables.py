@@ -60,6 +60,8 @@ class PortableExecutable(models.Extractor):
         self.kind = kind
         self.remap = remap
 
+        self.executable = None
+
         try:
             self.executable: pefile.PE = pefile.PE(self.entry, fast_load=True)
 
@@ -77,7 +79,8 @@ class PortableExecutable(models.Extractor):
             ) from exception
 
     def __del__(self: object) -> None:
-        self.executable.close()
+        if self.executable:
+            self.executable.close()
 
     def run(self: object, record: schema.Record) -> None:
         setattr(

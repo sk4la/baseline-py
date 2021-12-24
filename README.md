@@ -140,7 +140,7 @@ Options:
                                   specified multiple times (e.g. `--remap /mnt/image:/ --remap
                                   /dev/null:/dev/void`).
   --report / --no-report          Whether to show a final report at the end.  [default: report]
-  --skip-compression              Whether to skip on-the-fly compression of the resulting file.
+  --skip-compression              Whether to skip compression of the results.
   --skip-directories              Whether to skip directories.
   --skip-empty                    Whether to skip empty entries.
   --help                          Show this message and exit.

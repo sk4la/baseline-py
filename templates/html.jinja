@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }} — {{ computer_name }}</title>
+  </head>
+  <body>
+    <div>
+      <ol>
+        {% for record in records %}
+        <li>{{ record.json() }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </body>
+</html>

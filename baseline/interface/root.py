@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import abc
 import datetime
 import functools
 import getpass
@@ -32,6 +33,7 @@ import typing
 import click
 import click_help_colors
 import hfilesize
+import jinja2
 import psutil
 import pydantic
 import pydantic.schema
@@ -39,7 +41,7 @@ import rich
 import rich.logging
 
 import baseline
-from baseline import core, errors, extractors, interface, models, schema
+from baseline import core, errors, extractors, interface, schema
 
 __all__: list = []
 
@@ -229,6 +231,41 @@ class PlatformSpecificDefaults(click.Argument):
         )
 
 
+class Renderer(abc.ABC):
+    """Abstract base class that represents a renderer."""
+
+    @property
+    @abc.abstractclassmethod
+    def TEMPLATE(cls: object) -> typing.Union[str, pathlib.Path]:
+        """Class property that points the Jinja template to use."""
+
+    def __init__(self: object) -> None:
+        self.template = self.read_template()
+
+    def read_template(self: object) -> jinja2.Template:
+        """Reads Jinja template content."""
+
+        return jinja2.Template(
+            pathlib.Path(self.TEMPLATE).resolve().read_text(),
+        )
+
+    def render(
+        self: object,
+        **components: typing.Any,
+    ) -> str:
+        """Renders the templated file using the given components."""
+
+        return self.template.render(**components)
+
+
+class HtmlRenderer(Renderer):
+    TEMPLATE = interface.ENVIRONMENT["root"] / "templates" / "html.jinja"
+
+
+class NdjsonRenderer(Renderer):
+    TEMPLATE = interface.ENVIRONMENT["root"] / "templates" / "ndjson.jinja"
+
+
 @execute.command(
     cls=click_help_colors.HelpColorsCommand,
     context_settings={
@@ -332,7 +369,7 @@ class PlatformSpecificDefaults(click.Argument):
     help="Set the output format.",
     show_default=True,
     type=click.Choice(
-        ["ndjson"],
+        ["html", "ndjson"],
         case_sensitive=False,
     ),
 )
@@ -384,7 +421,7 @@ class PlatformSpecificDefaults(click.Argument):
 )
 @click.option(
     "--skip-compression",
-    help="Whether to skip on-the-fly compression of the resulting file.",
+    help="Whether to skip compression of the results.",
     is_flag=True,
 )
 @click.option(
@@ -591,7 +628,7 @@ def create_baseline(
     logger.info("Language                  : %s", ".".join(locale.getdefaultlocale()))
     logger.info("System Timezone           : %s", datetime.datetime.now().astimezone().tzname())
     logger.info("Processor Architecture    : %s", platform.machine())
-    logger.info("Computer Name             : %s", platform.node())
+    logger.info("Computer Name             : %s", interface.ENVIRONMENT["node"])
     logger.info("Username                  : %s", getpass.getuser())
     logger.info("Effective User Identifier : %s", os.geteuid())
     logger.info("Effective Command Line    : %s", " ".join(sys.argv))
@@ -601,7 +638,7 @@ def create_baseline(
         if exclude_extractor
         else "",
     )
-    logger.info("Current Working Directory : %s", interface.ENVIRONMENT["root"])
+    logger.info("Current Working Directory : %s", interface.ENVIRONMENT["cwd"])
 
     start_time: datetime.datetime = datetime.datetime.utcnow()
 
@@ -619,72 +656,76 @@ def create_baseline(
             skip_empty=skip_empty,
             remap=remap,
         ) as executor:
-            results: typing.Iterator[schema.Record] = executor.compute(*include)
 
-            count: int = 0
-            total_size: int = 0
+            # The following is usually not a good pattern since we directly cast the returned
+            # iterator into a list, loading all results into memory. Unfortunately, we need
+            # this for Jinja templating to work as intended.
+            results: typing.List[typing.Iterator[schema.Record]] = list(executor.compute(*include))
 
-            if skip_compression:
-                logger.warning(
-                    "Skipping on-the-fly compression because of the `--skip-compression` flag. "
-                    "Be aware that the resulting file can become quite big, depending on the "
-                    "number of entries that need to be processed.",
+            count: int = len(results)
+
+            try:
+                renderer = {
+                    "html": HtmlRenderer(),
+                    "ndjson": NdjsonRenderer(),
+                }
+
+                components = {
+                    "title": baseline.__package__.capitalize(),
+                    "computer_name": interface.ENVIRONMENT["node"],
+                    "records": results,
+                }
+
+                if skip_compression:
+                    logger.warning(
+                        "Skipping compression of the results because of the `--skip-compression` "
+                        "flag. Be aware that the resulting file can become quite big, depending "
+                        "on the number of entries that need to be processed.",
+                    )
+                    logger.debug("Writing the results to `%s`.", output_file)
+
+                    with output_file.open(mode="w", encoding=output_file_encoding) as stream:
+                        stream.write(renderer[output_format].render(**components))
+
+                else:
+                    output_file: pathlib.Path = output_file.with_suffix(f"{output_file.suffix}.xz")
+
+                    logger.debug("Compressing and writing the results to `%s`.", output_file)
+
+                    with lzma.open(output_file, mode="wb") as stream:
+                        stream.write(
+                            renderer[output_format]
+                            .render(**components)
+                            .encode(output_file_encoding)
+                        )
+
+            except PermissionError:
+                logger.error(
+                    "Failed to open file `%s` for writing because of insufficient " "permissions.",
+                    output_file,
                 )
-                logger.debug("Writing the results to `%s`.", output_file)
 
-                try:
-                    with output_file.open(
-                        mode="w",
-                        encoding=output_file_encoding,
-                    ) as stream:
-                        for entry in results:
-                            data: str = entry.json(exclude_none=True) + "\n"
+                sys.exit(os.EX_SOFTWARE)
 
-                            count += 1
-                            total_size += len(data)
+            except RuntimeError:
+                logger.error(
+                    "Probable infinite loop encountered while opening file `%s` for writing.",
+                    output_file,
+                )
 
-                            stream.write(data)
+                sys.exit(os.EX_SOFTWARE)
 
-                except PermissionError:
-                    logger.error(
-                        "Failed to open file `%s` for writing because of insufficient "
-                        "permissions.",
-                        output_file,
-                    )
+            except Exception:
+                logger.exception(
+                    "Unknown system exception raised while opening file `%s` for writing.",
+                    output_file,
+                )
 
-                    sys.exit(os.EX_SOFTWARE)
-
-                except RuntimeError:
-                    logger.error(
-                        "Probable infinite loop encountered while opening file `%s` for writing.",
-                        output_file,
-                    )
-
-                    sys.exit(os.EX_SOFTWARE)
-
-                except Exception:
-                    logger.exception(
-                        "Unknown system exception raised while opening file `%s` for writing.",
-                        output_file,
-                    )
-
-                    sys.exit(os.EX_SOFTWARE)
-
-            else:
-                output_file: pathlib.Path = output_file.with_suffix(f"{output_file.suffix}.xz")
-
-                logger.debug("Compressing and writing the results to `%s`.", output_file)
-
-                with lzma.open(output_file, "wb") as stream:
-                    for entry in results:
-                        data = (entry.json(exclude_none=True) + "\n").encode(output_file_encoding)
-
-                        count += 1
-                        total_size += len(data)
-
-                        stream.write(data)
+                sys.exit(os.EX_SOFTWARE)
 
             duration: datetime.timedelta = datetime.datetime.utcnow() - start_time
+
+            total_size = output_file.stat().st_size
 
             logger.info("Written `%d` bytes of results to `%s`.", total_size, output_file)
             logger.info("Finished in `%s`.", duration)
