@@ -26,7 +26,7 @@ def iterate_extractors(
     exclude: typing.List[str] = [],
 ) -> typing.Iterator[models.Extractor]:
     for extractor in models.Extractor.__subclasses__():
-        if extractor.is_compatible():
+        if extractor.is_compatible:
             if extractor.KEY in exclude:
                 logger: logging.Logger = logging.getLogger(__name__)
                 logger.debug("Ignoring excluded extractor `%s`.", extractor.KEY)

@@ -44,14 +44,14 @@ class PortableExecutable(models.Extractor):
         r"\.tsp$",
     )
     KEY = "pe"
-    KINDS = (models.kinds.FILE,)
+    KINDS = (models.Kind.FILE,)
     MAGIC_SIGNATURE_FILTERS = (r"^PE32(\+) executable",)
     SYSTEM_FILTERS = (r"^Linux$",)
 
     def __init__(
         self: object,
         entry: pathlib.Path,
-        kind: int = models.kinds.FILE,
+        kind: int = models.Kind.FILE,
         remap: typing.Dict[pathlib.Path, pathlib.Path] = {},
     ) -> None:
         self.logger = logging.getLogger(__name__)
@@ -69,13 +69,13 @@ class PortableExecutable(models.Extractor):
             self.logger.exception(
                 "Failed to load file `%s` (%s).",
                 self.entry,
-                models.kinds.humanize(self.kind),
+                str(self.kind),
             )
 
-            raise errors.Failure(
+            raise errors.GenericError(
                 f"failed to load file {self.entry}",
                 self.entry,
-                models.kinds.humanize(self.kind),
+                str(self.kind),
             ) from exception
 
     def __del__(self: object) -> None:
@@ -87,14 +87,14 @@ class PortableExecutable(models.Extractor):
             record,
             self.KEY,
             schema.PortableExecutable(
-                exports=list(self.__get_exports(self.executable)),
-                imports=list(self.__get_imports(self.executable)),
-                resources=list(self.__get_resources(self.executable)),
-                sections=list(self.__get_sections(self.executable)),
+                exports=list(self._get_exports(self.executable)),
+                imports=list(self._get_imports(self.executable)),
+                resources=list(self._get_resources(self.executable)),
+                sections=list(self._get_sections(self.executable)),
             ),
         )
 
-    def __get_exports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
+    def _get_exports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
         executable.parse_data_directories(
             directories=[pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_EXPORT"]],
         )
@@ -112,7 +112,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_imports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
+    def _get_imports(self: object, executable: pefile.PE) -> typing.Iterator[str]:
         executable.parse_data_directories(
             directories=[pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"]],
         )
@@ -133,7 +133,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_resources(
+    def _get_resources(
         self: object,
         executable: pefile.PE,
     ) -> typing.Iterator[schema.PortableExecutableResource]:
@@ -158,7 +158,7 @@ class PortableExecutable(models.Extractor):
             self.entry,
         )
 
-    def __get_sections(
+    def _get_sections(
         self: object,
         executable: pefile.PE,
     ) -> typing.Iterator[schema.PortableExecutableSection]:

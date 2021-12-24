@@ -37,15 +37,15 @@ class Metadata(models.Extractor):
     EXTENSION_FILTERS = (r".*",)
     KEY = "fs"
     KINDS = (
-        models.kinds.FILE,
-        models.kinds.DIRECTORY,
-        models.kinds.SYMLINK,
-        models.kinds.BLOCK_DEVICE,
-        models.kinds.CHARACTER_DEVICE,
-        models.kinds.FIFO,
-        models.kinds.SOCKET,
-        models.kinds.MOUNT,
-        models.kinds.OTHER,
+        models.Kind.FILE,
+        models.Kind.DIRECTORY,
+        models.Kind.SYMLINK,
+        models.Kind.BLOCK_DEVICE,
+        models.Kind.CHARACTER_DEVICE,
+        models.Kind.FIFO,
+        models.Kind.SOCKET,
+        models.Kind.MOUNT,
+        models.Kind.OTHER,
     )
     MAGIC_SIGNATURE_FILTERS = (r".*",)
     SYSTEM_FILTERS = (r"^Linux$",)
@@ -71,7 +71,7 @@ class Metadata(models.Extractor):
 
         try:
             stats = self.entry.stat(
-                follow_symlinks=self.kind != models.kinds.SYMLINK,
+                follow_symlinks=self.kind != models.Kind.SYMLINK,
             )
 
         except TypeError:
@@ -81,22 +81,25 @@ class Metadata(models.Extractor):
             warnings.warn(
                 "The `follow_symlinks` parameter was only added to `pathlib.Path.stat` in Python "
                 "3.10 so it cannot be used with the current installation of Python ("
-                f"{'.'.join(str(_) for _ in sys.version_info[:3])}). Update your installation to "
-                "remove this warning. Falling back to the old way (following all symlinks).",
+                f"{'.'.join(str(component) for component in sys.version_info[:3])}). Update your "
+                "installation to remove this warning. Falling back to the old way (following all "
+                "symlinks)."
             )
 
             stats = self.entry.stat()
+
+        location = self.remap_location(self.entry)
 
         setattr(
             record,
             self.KEY,
             schema.FilesystemMetadata(
-                extension=self.remap_location(self.entry).suffix or None,
-                name=self.remap_location(self.entry).name,
+                extension=location.suffix or None,
+                name=location.name,
                 parent=schema.Parent(
-                    path=str(self.remap_location(self.entry).parent),
+                    path=str(location.parent),
                 ),
-                path=str(self.remap_location(self.entry)),
+                path=str(location),
                 permissions=schema.Permissions(
                     mode=str(oct(stats.st_mode)),
                     ownership=schema.Ownership(
@@ -107,7 +110,9 @@ class Metadata(models.Extractor):
                     ),
                 ),
                 size=stats.st_size,
-                target=str(self.entry.readlink()) if self.kind == models.kinds.SYMLINK else None,
+                target=str(self.entry.readlink())
+                if self.kind == models.Kind.SYMLINK
+                else None,
                 timestamps=schema.Timestamps(
                     atime=datetime.datetime.utcfromtimestamp(stats.st_atime).isoformat(),
                     ctime=datetime.datetime.utcfromtimestamp(stats.st_ctime).isoformat(),
@@ -124,7 +129,7 @@ class Hashes(models.Extractor):
 
     EXTENSION_FILTERS = (r".*",)
     KEY = "hash"
-    KINDS = (models.kinds.FILE,)
+    KINDS = (models.Kind.FILE,)
     MAGIC_SIGNATURE_FILTERS = (r".*",)
     SYSTEM_FILTERS = (r"^Linux$",)
 
@@ -133,15 +138,15 @@ class Hashes(models.Extractor):
             record,
             self.KEY,
             schema.HashDigests(
-                entropy=self.__compute_entropy(self.entry),
-                md5=self.__compute_hash(self.entry),
-                sha1=self.__compute_hash(self.entry, hash_algorithm="sha1"),
-                sha256=self.__compute_hash(self.entry, hash_algorithm="sha256"),
-                ssdeep=self.__compute_fuzzy_hash(self.entry),
+                entropy=self._compute_entropy(self.entry),
+                md5=self._compute_hash(self.entry),
+                sha1=self._compute_hash(self.entry, hash_algorithm="sha1"),
+                sha256=self._compute_hash(self.entry, hash_algorithm="sha256"),
+                ssdeep=self._compute_fuzzy_hash(self.entry),
             ),
         )
 
-    def __compute_entropy(self: object, entry: pathlib.Path) -> float:
+    def _compute_entropy(self: object, entry: pathlib.Path) -> float:
         with entry.open("rb") as stream:
             entropy: float = common.compute_shannon_entropy(stream)
 
@@ -149,7 +154,24 @@ class Hashes(models.Extractor):
 
             return entropy
 
-    def __compute_hash(
+    def _compute_fuzzy_hash(
+        self: object,
+        entry: pathlib.Path,
+        buffer_size: int = 4096,
+    ) -> str:
+        with entry.open("rb") as stream:
+            cipher = ssdeep.Hash()
+
+            while chunk := stream.read(buffer_size):
+                cipher.update(chunk)
+
+            digest: str = cipher.digest()
+
+            self.logger.debug("Computed `ssdeep` fuzzy hash digest of file `%s`.", entry)
+
+            return digest
+
+    def _compute_hash(
         self: object,
         entry: pathlib.Path,
         hash_algorithm: str = "md5",
@@ -164,22 +186,5 @@ class Hashes(models.Extractor):
             digest: str = cipher.hexdigest()
 
             self.logger.debug("Computed `%s` hash digest of file `%s`.", hash_algorithm, entry)
-
-            return digest
-
-    def __compute_fuzzy_hash(
-        self: object,
-        entry: pathlib.Path,
-        buffer_size: int = 4096,
-    ) -> str:
-        with entry.open("rb") as stream:
-            cipher = ssdeep.Hash()
-
-            while chunk := stream.read(buffer_size):
-                cipher.update(chunk)
-
-            digest: str = cipher.digest()
-
-            self.logger.debug("Computed `ssdeep` fuzzy hash digest of file `%s`.", entry)
 
             return digest

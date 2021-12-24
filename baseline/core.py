@@ -78,7 +78,7 @@ def gather_filesystem_entries(
                     continue
 
             if entry.is_file():
-                kind: int = models.kinds.FILE
+                kind: int = models.Kind.FILE
 
             elif entry.is_dir():
                 if skip_directories:
@@ -89,31 +89,31 @@ def gather_filesystem_entries(
 
                     continue
 
-                kind: int = models.kinds.DIRECTORY
+                kind: int = models.Kind.DIRECTORY
 
             elif entry.is_block_device():
-                kind: int = models.kinds.BLOCK_DEVICE
+                kind: int = models.Kind.BLOCK_DEVICE
 
             elif entry.is_char_device():
-                kind: int = models.kinds.CHARACTER_DEVICE
+                kind: int = models.Kind.CHARACTER_DEVICE
 
             elif entry.is_fifo():
-                kind: int = models.kinds.FIFO
+                kind: int = models.Kind.FIFO
 
             elif entry.is_socket():
-                kind: int = models.kinds.SOCKET
+                kind: int = models.Kind.SOCKET
 
             elif entry.is_symlink():
-                kind: int = models.kinds.SYMLINK
+                kind: int = models.Kind.SYMLINK
 
             elif entry.is_mount():
-                kind: int = models.kinds.MOUNT
+                kind: int = models.Kind.MOUNT
 
             else:
-                kind: int = models.kinds.OTHER
+                kind: int = models.Kind.OTHER
 
             try:
-                stats = entry.stat(follow_symlinks=kind != models.kinds.SYMLINK)
+                stats = entry.stat(follow_symlinks=kind != models.Kind.SYMLINK)
 
             except TypeError:
                 if sys.version_info >= (3, 10):
@@ -122,8 +122,9 @@ def gather_filesystem_entries(
                 warnings.warn(
                     "The `follow_symlinks` parameter was only added to `pathlib.Path.stat` in Python "
                     "3.10 so it cannot be used with the current installation of Python ("
-                    f"{'.'.join(str(_) for _ in sys.version_info[:3])}). Update your installation to "
-                    "remove this warning. Falling back to the old way (following all symlinks)."
+                    f"{'.'.join(str(component) for component in sys.version_info[:3])}). Update your "
+                    "installation to remove this warning. Falling back to the old way (following all "
+                    "symlinks)."
                 )
 
                 try:
@@ -234,8 +235,8 @@ def process_partition(
         mime_type: typing.Optional[str] = None
 
         if kind in (
-            models.kinds.FILE,
-            models.kinds.BLOCK_DEVICE,
+            models.Kind.FILE,
+            models.Kind.BLOCK_DEVICE,
         ):
             try:
                 with entry.open("rb") as stream:
@@ -280,7 +281,7 @@ def process_partition(
 
         record: schema.Record = schema.Record(
             signature=schema.Signature(
-                kind=models.kinds.humanize(kind),
+                kind=str(kind),
                 magic=magic_signature,
                 mime=mime_type,
             ),
@@ -294,12 +295,12 @@ def process_partition(
 
                     logger.debug("Merged output from extractor `%s`.", extractor.KEY)
 
-                except errors.Failure:
+                except errors.GenericError:
                     logger.error(
                         "Failed to extract information from entry `%s` (%s) because of an "
                         "exception in extractor `%s`.",
                         entry,
-                        models.kinds.humanize(kind),
+                        str(kind),
                         extractor.KEY,
                     )
 
@@ -308,7 +309,7 @@ def process_partition(
                         "Failed to extract information from entry `%s` (%s) because of an "
                         "unrecoverable exception in extractor `%s`.",
                         entry,
-                        models.kinds.humanize(kind),
+                        str(kind),
                         extractor.KEY,
                     )
 
@@ -376,7 +377,7 @@ class Baseline:
             )
 
         except FileNotFoundError as exception:
-            raise errors.Failure(f"entry `{exception.filename}` not found") from exception
+            raise errors.GenericError(f"entry `{exception.filename}` not found") from exception
 
         except pydantic.ValidationError as exception:
             outliers: typing.List[str] = list(
@@ -384,13 +385,16 @@ class Baseline:
             )
 
             self.logger.exception(
-                "Validation error in class attributes `%s`.",
+                "Validation error in the `%s` class attributes `%s`.",
+                __name__,
                 ", ".join(outliers),
             )
 
             raise errors.ValidationError(
                 "validation error in class attributes",
-                parameters=outliers,
+                context={
+                    "parameters": outliers,
+                },
             ) from exception
 
         try:
@@ -411,14 +415,14 @@ class Baseline:
                 "Unrecoverable failure in multiprocessing pool. Exiting now.",
             )
 
-            raise errors.Failure("process pool shut down abruptly") from exception
+            raise errors.GenericError("process pool shut down abruptly") from exception
 
         self.futures: typing.Dict[str, typing.Set[concurrent.futures.Future]] = {
             "gathering": set(),
             "analysis": set(),
         }
 
-    def __split_partitions(
+    def _split_partitions(
         self: object,
         items: typing.List[typing.Any],
         count: int = 1,
@@ -441,9 +445,9 @@ class Baseline:
         # exception with the complete traceback).
         #
         if traceback:
-            {KeyboardInterrupt: self.__interrupt}.get(
+            {KeyboardInterrupt: self._interrupt}.get(
                 kind,
-                self.__panic,
+                self._panic,
             )(kind, value, traceback)
 
         self.pool.shutdown()
@@ -453,7 +457,7 @@ class Baseline:
         #
         self.pool.__exit__(None, None, None)
 
-    def __panic(
+    def _panic(
         self: object,
         _: typing.Optional[typing.Any],
         value: typing.Optional[BaseException],
@@ -464,9 +468,9 @@ class Baseline:
 
             self.pool.shutdown()
 
-            raise errors.Failure("process pool shut down abruptly") from value
+            raise errors.GenericError("process pool shut down abruptly") from value
 
-    def __interrupt(
+    def _interrupt(
         self: object,
         *_args: typing.Any,
         **_kwargs: typing.Any,
@@ -527,7 +531,7 @@ class Baseline:
             )
 
         except FileNotFoundError as exception:
-            raise errors.Failure(f"entry `{exception.filename}` not found") from exception
+            raise errors.GenericError(f"entry `{exception.filename}` not found") from exception
 
         except pydantic.ValidationError as exception:
             outliers: typing.List[str] = list(
@@ -535,13 +539,16 @@ class Baseline:
             )
 
             self.logger.exception(
-                "Validation error in class attributes `%s`.",
+                "Validation error in the `%s` class attributes `%s`.",
+                __name__,
                 ", ".join(outliers),
             )
 
             raise errors.ValidationError(
                 "validation error in class attributes",
-                parameters=outliers,
+                context={
+                    "parameters": outliers,
+                },
             ) from exception
 
         with self.pool as executor:
@@ -587,7 +594,7 @@ class Baseline:
                     float(total) / float(parameters.partition_size),
                 )
 
-                for partition in self.__split_partitions(entries, parameters.partition_size):
+                for partition in self._split_partitions(entries, parameters.partition_size):
                     self.futures["analysis"].add(
                         executor.submit(
                             process_partition,
@@ -618,6 +625,6 @@ class Baseline:
                     )
 
                     for record in records:
-                        record.comment: typing.Optional[str] = parameters.comment
+                        record.comment = parameters.comment
 
                         yield record
