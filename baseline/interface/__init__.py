@@ -21,8 +21,9 @@ import typing
 __all__: list = []
 
 ENVIRONMENT: typing.Dict[str, typing.Any] = {
+    "cwd": pathlib.Path.cwd().resolve(strict=True),
     "node": platform.node(),
-    "root": pathlib.Path.cwd().resolve(strict=True),
+    "root": pathlib.Path(__file__).resolve(strict=True).parents[2],
     "timestamp": datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S"),
 }
 
@@ -46,15 +47,15 @@ PLATFORM_SPECIFIC_DEFAULTS: typing.Dict[str, typing.Dict[str, typing.Any]] = {
     },
     "log_file": {
         "Linux": (
-            ENVIRONMENT.get("root") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.log"
+            ENVIRONMENT.get("cwd") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.log"
         ),
-        "": (ENVIRONMENT.get("root") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.log"),
+        "": (ENVIRONMENT.get("cwd") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.log"),
     },
     "output_file": {
         "Linux": (
-            ENVIRONMENT.get("root") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.ndjson"
+            ENVIRONMENT.get("cwd") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.ndjson"
         ),
-        "": (ENVIRONMENT.get("root") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.ndjson"),
+        "": (ENVIRONMENT.get("cwd") / f"{ENVIRONMENT['timestamp']}.{ENVIRONMENT['node']}.ndjson"),
     },
     "output_file_encoding": {
         "Linux": "utf-8",

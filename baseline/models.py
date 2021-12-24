@@ -59,7 +59,7 @@ kinds: ObjectKind = ObjectKind()
 
 
 class Extractor:
-    """This is an example."""
+    """Pseudo-abstract class."""
 
     EXTENSION_FILTERS: typing.Tuple[str, ...] = tuple()
     KEY: str = "example"
